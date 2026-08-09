@@ -17,3 +17,7 @@ export function isLocalLink(url: string): boolean {
   if (url.startsWith("#")) return false;
   return !/^[a-z][a-z0-9+.-]*:/i.test(url);
 }
+
+export function isRemoteLink(url: string): boolean {
+  return /^https?:/i.test(url);
+}
