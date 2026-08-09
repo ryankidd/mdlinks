@@ -2,11 +2,14 @@
 
 A small CLI that checks a markdown file for broken links.
 
-It scans a markdown file for inline links (`[text](url)`), and for every
-link that points at a local file — as opposed to `http(s)://`, `mailto:`,
-or similar — checks that the target actually exists on disk, resolved
-relative to the markdown file's directory. Links to external URLs are
-currently listed but not checked.
+It scans a markdown file for inline links (`[text](url)`). Links that point
+at a local file are resolved relative to the markdown file's directory and
+checked for existence on disk. Links to `http(s)://` URLs are checked with
+an HTTP request instead: a `HEAD` request first, falling back to `GET` if
+the server doesn't seem to support `HEAD`. Remote checks run with a
+concurrency limit and a per-request timeout so a single slow or unreachable
+host doesn't stall the whole run. Other schemes, like `mailto:`, are
+skipped.
 
 ## Install
 
