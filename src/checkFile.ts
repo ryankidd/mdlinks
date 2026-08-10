@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { extractLinks, isLocalLink, isRemoteLink } from "./links.js";
+import { isIgnored } from "./ignore.js";
 import { createLimiter } from "./limit.js";
 import { checkRemoteLink, DEFAULT_REMOTE_TIMEOUT_MS, type FetchLike } from "./remoteLinks.js";
 
@@ -18,6 +19,8 @@ export interface CheckFileOptions {
   timeoutMs?: number;
   /** Override for the fetch implementation used to check remote links. */
   fetchImpl?: FetchLike;
+  /** Glob patterns (`*` wildcard) for URLs to skip entirely. */
+  ignore?: readonly string[];
 }
 
 const DEFAULT_CONCURRENCY = 5;
@@ -28,6 +31,10 @@ export async function checkFile(filePath: string, options: CheckFileOptions = {}
   const limit = createLimiter(options.concurrency ?? DEFAULT_CONCURRENCY);
 
   const checks = extractLinks(markdown).map((link): Promise<LinkCheckResult> | undefined => {
+    if (isIgnored(link.url, options.ignore ?? [])) {
+      return undefined;
+    }
+
     if (isLocalLink(link.url)) {
       const [target] = link.url.split("#");
       const resolvedPath = resolve(baseDir, target);

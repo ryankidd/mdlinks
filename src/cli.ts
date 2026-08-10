@@ -3,13 +3,18 @@ import { Command } from "commander";
 import { checkFiles } from "./checkFiles.js";
 import { resolveMarkdownFiles } from "./targets.js";
 
+function collect(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
 const program = new Command();
 
 program
   .name("mdlinks")
   .description("Check markdown files for broken links")
   .argument("<paths...>", "markdown files, directories, or glob patterns")
-  .action(async (paths: string[]) => {
+  .option("-i, --ignore <pattern>", "ignore URLs matching a glob pattern (repeatable)", collect, [] as string[])
+  .action(async (paths: string[], options: { ignore: string[] }) => {
     const files = await resolveMarkdownFiles(paths);
 
     if (files.length === 0) {
@@ -18,7 +23,7 @@ program
       return;
     }
 
-    const fileResults = await checkFiles(files);
+    const fileResults = await checkFiles(files, { ignore: options.ignore });
     let brokenTotal = 0;
 
     for (const { file, results } of fileResults) {

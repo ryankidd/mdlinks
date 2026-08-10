@@ -59,4 +59,19 @@ describe("checkFile", () => {
       { url: "https://example.com/missing", ok: false },
     ]);
   });
+
+  it("skips links matching an ignore pattern", async () => {
+    const mdPath = join(dir, "source.md");
+    await writeFile(
+      mdPath,
+      [
+        "This one is [missing](./missing.md).",
+        "This one is [ignored](./ignored.md) on purpose.",
+      ].join("\n"),
+    );
+
+    const results = await checkFile(mdPath, { ignore: ["./ignored.md"] });
+
+    expect(results).toEqual([{ url: "./missing.md", ok: false, resolvedPath: join(dir, "missing.md") }]);
+  });
 });
